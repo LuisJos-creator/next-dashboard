@@ -34,10 +34,10 @@ const navbar = () => {
                 className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
               >
                 <li>
-                  <a>dashboard</a>
+                  <a href="/">dashboard</a>
                 </li>
                 <li>
-                  <a>inventario</a>
+                  <a href="/inventario">inventario</a>
                 </li>
               </ul>
             </div>

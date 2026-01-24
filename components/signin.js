@@ -26,8 +26,8 @@ const Signin = () => {
   return (
     <>
       <div>
-        <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4 m-9">
-          <legend className="fieldset-legend text-center">Sign Up</legend>
+        <fieldset className="fieldset rounded-box w-xs border p-4 m-9">
+          <legend className="fieldset-legend text-center">Sign in</legend>
 
           <label className="label">Email</label>
           <input
@@ -47,7 +47,7 @@ const Signin = () => {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <button className="btn bg-error-content mt-4" onClick={handleSignin}>
+          <button className="btn bg-info-content mt-4" onClick={handleSignin}>
             Iniciar Sesión
           </button>
         </fieldset>

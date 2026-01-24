@@ -42,9 +42,9 @@ export default function Home() {
       */}
 
       <div className="flex justify-center mt-65 gap-5">
-        <Signin />
-        <div className="divider divider-horizontal">Sign In or Up</div>
         <Signup />
+        <div className="divider divider-horizontal border-base-content">Sign In or Up</div>
+        <Signin />
       </div>
     </>
   );

@@ -9,7 +9,7 @@ const radial = () => {
           {
             "--value": "70",
             "--size": "12rem",
-            "--thickness": "2rem",
+            "--thickness": "1rem",
           } /* as React.CSSProperties */
         }
         aria-valuenow={70}
