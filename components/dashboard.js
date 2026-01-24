@@ -1,24 +1,13 @@
 import { supabase } from "../utils/supabaseClient";
+import Navbar from "./navbar";
+import React from "react";
+import Contdash from "./contdash";
 
 const dashboard = () => {
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      alert("Sesión cerrada.");
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
   return (
     <>
-      <div className="flex flex-col items-center justify-center min-h-screen py-2">
-        <h1>Dashboard</h1>
-        <button className="btn bg-error-content mt-4" onClick={handleLogout}>
-          Cerrar Sesión
-        </button>
-      </div>
+      <Navbar />
+      <Contdash />
     </>
   );
 };
