@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 
 const list = () => {
+  const [name, setName] = useState(null)
   const [data, setData] = useState([]);
 
   const handleBorrar = async (id) => {
@@ -90,7 +91,7 @@ const list = () => {
 
         <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
           <label className="label">Title</label>
-          <input type="text" className="input" placeholder="My awesome page" />
+          <input type="text" className="input" value={name} onChange={(n) => setName(n.target.value)} placeholder="My awesome page" />
 
           <label className="label">Slug</label>
           <input type="text" className="input" placeholder="my-awesome-page" />
