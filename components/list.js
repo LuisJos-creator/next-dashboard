@@ -6,14 +6,18 @@ const list = () => {
   const [descripcion, setDescripcion] = useState("");
   const [cant, setCant] = useState("");
   const [prec, setPrec] = useState("");
-  const [file, setFile] = useState(null); // Nuevo estado para la imagen
+  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [data, setData] = useState([]);
+  
+  // NUEVO: Estado para saber si estamos editando
+  const [editId, setEditId] = useState(null);
 
   const fetchData = async () => {
     const { data, error } = await supabase
       .from("productos")
-      .select("id, img, nombre, descripcion, cantidad, precio");
+      .select("id, img, nombre, descripcion, cantidad, precio")
+      .order('id', { ascending: false }); // Opcional: ver los nuevos primero
     if (error) console.error(error);
     else setData(data);
   };
@@ -22,66 +26,90 @@ const list = () => {
     fetchData();
   }, []);
 
-  const handleBorrar = async (id) => {
-    const { error } = await supabase.from("productos").delete().eq("id", id);
-    if (error) {
-      console.error(error);
-    } else {
-      setData(data.filter((item) => item.id !== id));
-    }
+  // Función para limpiar campos y cerrar modal
+  const resetForm = () => {
+    setName("");
+    setDescripcion("");
+    setCant("");
+    setPrec("");
+    setFile(null);
+    setEditId(null);
+    window.location.hash = ""; 
   };
 
-  const handleAñadir = async () => {
+  // Cargar datos en el modal para editar
+  const prepararEdicion = (item) => {
+    setEditId(item.id);
+    setName(item.nombre);
+    setDescripcion(item.descripcion);
+    setCant(item.cantidad);
+    setPrec(item.precio);
+    // El input file no se puede llenar por seguridad, 
+    // se queda null a menos que el usuario elija una foto nueva.
+  };
+
+  const handleBorrar = async (id) => {
+    if(!confirm("¿Estás seguro de eliminar este producto?")) return;
+    const { error } = await supabase.from("productos").delete().eq("id", id);
+    if (error) console.error(error);
+    else fetchData();
+  };
+
+  const handleGuardar = async () => {
     try {
       setUploading(true);
-      let publicUrl = "";
+      
+      // Buscamos la URL de imagen actual si estamos editando
+      let currentImageUrl = editId ? data.find(p => p.id === editId)?.img : "";
 
-      // 1. Subir imagen si existe
+      // 1. Subir nueva imagen solo si el usuario seleccionó una
       if (file) {
         const fileExt = file.name.split(".").pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("img") // Asegúrate que el bucket se llame "img"
+          .from("img")
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
-        // 2. Obtener la URL pública
-        const { data: urlData } = supabase.storage
-          .from("img")
-          .getPublicUrl(filePath);
-        
-        publicUrl = urlData.publicUrl;
+        const { data: urlData } = supabase.storage.from("img").getPublicUrl(filePath);
+        currentImageUrl = urlData.publicUrl;
       }
 
-      // 3. Insertar en la base de datos
-      const { error: dbError } = await supabase.from("productos").insert([
-        {
-          nombre: name,
-          descripcion: descripcion,
-          cantidad: cant,
-          precio: prec,
-          img: publicUrl, // Guardamos la URL aquí
-        },
-      ]);
+      const productoData = {
+        nombre: name,
+        descripcion: descripcion,
+        cantidad: cant,
+        precio: prec,
+        img: currentImageUrl,
+      };
 
-      if (dbError) throw dbError;
+      if (editId) {
+        // 2. MODO EDICIÓN
+        const { error: updateError } = await supabase
+          .from("productos")
+          .update(productoData)
+          .eq("id", editId);
+        
+        if (updateError) throw updateError;
+        alert("Producto actualizado");
+      } else {
+        // 3. MODO AÑADIR
+        const { error: insertError } = await supabase
+          .from("productos")
+          .insert([productoData]);
 
-      // Limpiar campos y refrescar
-      alert("Producto añadido con éxito");
-      setName("");
-      setDescripcion("");
-      setCant("");
-      setPrec("");
-      setFile(null);
-      fetchData(); // Recargar la lista
-      window.location.hash = ""; // Cerrar modal (si usas daisyUI anchor)
+        if (insertError) throw insertError;
+        alert("Producto añadido");
+      }
+
+      resetForm();
+      fetchData();
 
     } catch (error) {
-      console.error("Error completo:", error.message);
-      alert("Error al añadir: " + error.message);
+      alert("Error: " + error.message);
     } finally {
       setUploading(false);
     }
@@ -89,7 +117,7 @@ const list = () => {
 
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto p-4">
         <table className="table table-xs">
           <thead>
             <tr>
@@ -99,38 +127,27 @@ const list = () => {
               <th>Cantidad</th>
               <th>Precio</th>
               <th>
-                <a href="#my_modal_8" className="btn btn-sm btn-success">
+                <a href="#my_modal_8" className="btn btn-sm btn-success" onClick={() => setEditId(null)}>
                   Añadir
                 </a>
               </th>
             </tr>
           </thead>
           <tbody>
-            {data.map((item, index) => (
-              <tr key={index}>
-                <td className="text-base">
-                  {item.img ? (
-                    <img
-                      src={item.img}
-                      alt={item.nombre}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs">Sin foto</div>
-                  )}
-                </td>
-                <td className="text-base">{item.nombre}</td>
-                <td className="text-base">{item.descripcion}</td>
-                <td className="text-base">
-                  {item.cantidad > 0 ? item.cantidad : "No Stock"}
-                </td>
-                <td className="text-base">${item.precio}</td>
+            {data.map((item) => (
+              <tr key={item.id}>
                 <td>
-                  <button className="btn btn-sm btn-primary m-1">Editar</button>
-                  <button
-                    className="btn btn-sm btn-error"
-                    onClick={() => handleBorrar(item.id)}
-                  >
+                  <img src={item.img || "https://via.placeholder.com/150"} className="w-12 h-12 object-cover rounded" />
+                </td>
+                <td className="font-bold">{item.nombre}</td>
+                <td>{item.descripcion}</td>
+                <td>{item.cantidad === 0 ? "No Stock" : item.cantidad}</td>
+                <td>${item.precio}</td>
+                <td>
+                  <a href="#my_modal_8" className="btn btn-sm btn-primary m-1" onClick={() => prepararEdicion(item)}>
+                    Editar
+                  </a>
+                  <button className="btn btn-sm btn-error" onClick={() => handleBorrar(item.id)}>
                     Eliminar
                   </button>
                 </td>
@@ -140,47 +157,31 @@ const list = () => {
         </table>
       </div>
 
-      {/* Modal */}
+      {/* Modal Unificado */}
       <div className="modal" role="dialog" id="my_modal_8">
         <div className="modal-box">
-          <h3 className="text-lg font-bold">Añadir producto</h3>
-          <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-full border p-4 mt-4">
-            
-            <label className="label">Imagen</label>
-            <input 
-              type="file" 
-              className="file-input file-input-bordered w-full" 
-              onChange={(e) => setFile(e.target.files[0])}
-              accept="image/*"
-            />
-
-            <label className="label">Nombre</label>
-            <input type="text" className="input input-bordered w-full" value={name} onChange={(e) => setName(e.target.value)} />
-
-            <label className="label">Descripción</label>
-            <input type="text" className="input input-bordered w-full" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="label">Cantidad</label>
-                <input type="number" className="input input-bordered w-full" value={cant} onChange={(e) => setCant(e.target.value)} />
-              </div>
-              <div className="flex-1">
-                <label className="label">Precio</label>
-                <input type="number" className="input input-bordered w-full" value={prec} onChange={(e) => setPrec(e.target.value)} />
-              </div>
-            </div>
-          </fieldset>
+          <h3 className="text-lg font-bold">{editId ? "Editar Producto" : "Añadir Producto"}</h3>
           
+          <div className="py-4 space-y-3">
+            <div className="form-control">
+              <label className="label">Imagen {editId && "(dejar vacío para mantener actual)"}</label>
+              <input type="file" className="file-input file-input-bordered w-full" onChange={(e) => setFile(e.target.files[0])} accept="image/*" />
+            </div>
+
+            <input type="text" placeholder="Nombre" className="input input-bordered w-full" value={name} onChange={(e) => setName(e.target.value)} />
+            <input type="text" placeholder="Descripción" className="input input-bordered w-full" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+            
+            <div className="flex gap-2">
+              <input type="number" placeholder="Cantidad" className="input input-bordered w-full" value={cant} onChange={(e) => setCant(e.target.value)} />
+              <input type="number" placeholder="Precio" className="input input-bordered w-full" value={prec} onChange={(e) => setPrec(e.target.value)} />
+            </div>
+          </div>
+
           <div className="modal-action">
-            <button 
-              className={`btn btn-success ${uploading ? 'loading' : ''}`} 
-              onClick={handleAñadir}
-              disabled={uploading}
-            >
-              {uploading ? 'Subiendo...' : 'Añadir'}
+            <button className={`btn btn-success ${uploading ? 'loading' : ''}`} onClick={handleGuardar} disabled={uploading}>
+              {uploading ? 'Guardando...' : (editId ? 'Actualizar' : 'Guardar')}
             </button>
-            <a href="#" className="btn btn-error">Cancelar</a>
+            <button className="btn btn-ghost" onClick={resetForm}>Cancelar</button>
           </div>
         </div>
       </div>
