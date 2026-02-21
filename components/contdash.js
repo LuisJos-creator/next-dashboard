@@ -4,6 +4,8 @@ import Progress from "./progress";
 import Stats from "./stats";
 import { supabase } from "../utils/supabaseClient";
 
+//*tengo que completar esto para que muestre info del supabase, lo dejo asi para continuar con otras cosas, creo que dejare esto de ultimo, me pondre a hacer  la parte de la facturacion
+
 const contdash = () => {
   
 const fetchData = async () => {

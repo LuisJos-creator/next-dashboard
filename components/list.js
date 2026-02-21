@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
+import FacturaPDF from "./facturacion";
 
 const list = () => {
   const [name, setName] = useState("");
@@ -9,7 +10,11 @@ const list = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [data, setData] = useState([]);
-  
+  const [nombreCLI, setNombreCLI] = useState("");
+  const [nombreVEN, setNombreVEN] = useState("");
+  const [fecha, setFecha] = useState(new Date().toLocaleDateString());
+  const [numcedula, setNumCedula] = useState("");
+  const [telefonoCLI, setTelefonoCLI] = useState("");
   // NUEVO: Estado para saber si estamos editando
   const [editId, setEditId] = useState(null);
 
@@ -20,6 +25,14 @@ const list = () => {
       .order('id', { ascending: false }); // Opcional: ver los nuevos primero
     if (error) console.error(error);
     else setData(data);
+  };
+
+  const fetchNombre = async () => {
+    const { nombre, error } = await supabase
+      .from("profiles")
+      .select("nombre")
+    if (error) console.error(error);
+    else setNombreVEN(nombre);
   };
 
   useEffect(() => {
@@ -34,6 +47,12 @@ const list = () => {
     setPrec("");
     setFile(null);
     setEditId(null);
+    setNombreCLI("");
+    setNombreVEN("");
+    setFecha(new Date().toLocaleDateString());
+    setNumCedula("");
+    setTelefonoCLI("");
+
     window.location.hash = ""; 
   };
 
@@ -54,6 +73,14 @@ const list = () => {
     if (error) console.error(error);
     else fetchData();
   };
+
+  const handleFacturar = async () => {
+    fetchNombre();
+    console.log("Nombre del vendedor:", nombreVEN);
+     
+    
+
+  }
 
   const handleGuardar = async () => {
     try {
@@ -127,8 +154,12 @@ const list = () => {
               <th>Cantidad</th>
               <th>Precio</th>
               <th>
-                <a href="#my_modal_8" className="btn btn-sm btn-success" onClick={() => setEditId(null)}>
+                <a href="#my_modal_8" className="btn btn-sm btn-success m-1" onClick={() => setEditId(null)}>
                   Añadir
+                </a>
+
+                <a href="#my_modal_9" className="btn btn-sm btn-success">
+                  Vender
                 </a>
               </th>
             </tr>
@@ -156,6 +187,31 @@ const list = () => {
           </tbody>
         </table>
       </div>
+
+ <div className="modal" role="dialog" id="my_modal_9">
+ <div className="modal-box">
+<h3 className="text-lg font-bold">Vender Producto</h3>
+
+<div className="py-4 space-y-3">
+
+<input type="text" placeholder="Nombre del cliente" className="input input-bordered w-full" value={nombreCLI} onChange={(e) => setNombreCLI(e.target.value)} />
+
+<input type="text" placeholder="n° de cedula del cliente" className="input input-bordered w-full" value={numcedula} onChange={(e) => setNumCedula(e.target.value)} />
+
+<input type="text" placeholder="telefono del cliente" className="input input-bordered w-full" value={telefonoCLI} onChange={(e) => setTelefonoCLI(e.target.value)} />
+
+
+
+</div>
+
+<button className="btn btn-success" onClick={handleFacturar}>Facturar</button>
+
+<button className="btn btn-ghost"  onClick={() => {
+resetForm();
+}}>Cancelar</button>
+
+</div>
+</div>      
 
       {/* Modal Unificado */}
       <div className="modal" role="dialog" id="my_modal_8">

@@ -6,9 +6,9 @@ const stats = () => {
       <div>
         <div className="stats-horizontal shadow">
           <div className="stat">
-            <div className="stat-title">Valor</div>
+            <div className="stat-title">valor</div>
             <div className="stat-value">000,000</div>
-            <div className="stat-desc">Valor</div>
+            <div className="stat-desc">valor</div>
           </div>
         </div>
       </div>
@@ -35,5 +35,6 @@ const stats = () => {
     </>
   );
 };
+
 
 export default stats;
