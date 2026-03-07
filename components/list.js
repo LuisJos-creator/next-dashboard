@@ -13,7 +13,7 @@ const list = () => {
   const [nombreCLI, setNombreCLI] = useState("");
   const [nombreVEN, setNombreVEN] = useState("");
   const [fecha, setFecha] = useState(new Date().toLocaleDateString());
-  const [numcedula, setNumCedula] = useState("");
+  const [numcedulaCLI, setNumCedulaCLI] = useState("");
   const [telefonoCLI, setTelefonoCLI] = useState("");
   // NUEVO: Estado para saber si estamos editando
   const [editId, setEditId] = useState(null);
@@ -27,12 +27,15 @@ const list = () => {
     else setData(data);
   };
 
-  const fetchNombre = async () => {
-    const { nombre, error } = await supabase
+const fetchNombre = async () => {
+    const { data, error } = await supabase
       .from("profiles")
-      .select("nombre")
-    if (error) console.error(error);
-    else setNombreVEN(nombre);
+      .select("name") // <--- ASEGÚRATE que diga "name" (en minúsculas e inglés)
+      .single();
+
+    if (error) {
+      console.error("Error detallado de Supabase:", error);
+    }
   };
 
   useEffect(() => {
@@ -50,7 +53,7 @@ const list = () => {
     setNombreCLI("");
     setNombreVEN("");
     setFecha(new Date().toLocaleDateString());
-    setNumCedula("");
+    setNumCedulaCLI("");
     setTelefonoCLI("");
 
     window.location.hash = ""; 
@@ -76,11 +79,14 @@ const list = () => {
 
   const handleFacturar = async () => {
     fetchNombre();
-    console.log("Nombre del vendedor:", nombreVEN);
-     
-    
-
-  }
+    FacturaPDF({
+      nombreCliente: nombreCLI,
+      nombreVendedor: nombreVEN,
+      fecha: fecha,
+      numCedula: numcedulaCLI,
+      telefono: telefonoCLI,
+    });
+  };
 
   const handleGuardar = async () => {
     try {
@@ -158,7 +164,8 @@ const list = () => {
                   Añadir
                 </a>
 
-                <a href="#my_modal_9" className="btn btn-sm btn-success">
+                <a href="#my_modal_9" className="btn btn-sm btn-success" onClick={() => {handleFacturar();
+}}>
                   Vender
                 </a>
               </th>
@@ -196,7 +203,7 @@ const list = () => {
 
 <input type="text" placeholder="Nombre del cliente" className="input input-bordered w-full" value={nombreCLI} onChange={(e) => setNombreCLI(e.target.value)} />
 
-<input type="text" placeholder="n° de cedula del cliente" className="input input-bordered w-full" value={numcedula} onChange={(e) => setNumCedula(e.target.value)} />
+<input type="text" placeholder="n° de cedula del cliente" className="input input-bordered w-full" value={numcedulaCLI} onChange={(e) => setNumCedulaCLI(e.target.value)} />
 
 <input type="text" placeholder="telefono del cliente" className="input input-bordered w-full" value={telefonoCLI} onChange={(e) => setTelefonoCLI(e.target.value)} />
 
