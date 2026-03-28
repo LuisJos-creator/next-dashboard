@@ -39,11 +39,14 @@ const navbar = () => {
                 <li>
                   <a href="/inventario">inventario</a>
                 </li>
+                 <li>
+                  <a href="/inventario">inventario</a>
+                </li>
               </ul>
             </div>
           </div>
           <div className="navbar-center">
-            <a className="btn btn-ghost text-xl">daisyUI</a>
+            <a className="btn btn-ghost text-xl">una empresa</a>
           </div>
           <div className="navbar-end">
             <Buttonlogout />
