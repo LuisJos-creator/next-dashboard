@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
+import { PDFDownloadLink } from '@react-pdf/renderer';
 import FacturaPDF from "./facturacion";
 
 const list = () => {
@@ -10,6 +11,8 @@ const list = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [data, setData] = useState([]);
+  const [selectedProductIds, setSelectedProductIds] = useState({});
+  const [sellQuantities, setSellQuantities] = useState({});
   const [nombreCLI, setNombreCLI] = useState("");
   const [nombreVEN, setNombreVEN] = useState("");
   const [fecha, setFecha] = useState(new Date().toLocaleDateString());
@@ -35,11 +38,17 @@ const fetchNombre = async () => {
 
     if (error) {
       console.error("Error detallado de Supabase:", error);
+      return;
+    }
+
+    if (data && data.name) {
+      setNombreVEN(data.name);
     }
   };
 
   useEffect(() => {
     fetchData();
+    fetchNombre();
   }, []);
 
   // Función para limpiar campos y cerrar modal
@@ -77,16 +86,79 @@ const fetchNombre = async () => {
     else fetchData();
   };
 
-  const handleFacturar = async () => {
-    fetchNombre();
-    FacturaPDF({
-      nombreCliente: nombreCLI,
-      nombreVendedor: nombreVEN,
-      fecha: fecha,
-      numCedula: numcedulaCLI,
-      telefono: telefonoCLI,
-    });
+  const toggleSelectProduct = (item) => {
+    const isSelected = !!selectedProductIds[item.id];
+    const newSelection = { ...selectedProductIds };
+    const newQuantities = { ...sellQuantities };
+
+    if (isSelected) {
+      delete newSelection[item.id];
+      delete newQuantities[item.id];
+    } else {
+      newSelection[item.id] = true;
+      newQuantities[item.id] = 1;
+    }
+
+    setSelectedProductIds(newSelection);
+    setSellQuantities(newQuantities);
   };
+
+  const handleFacturar = async () => {
+    await fetchNombre();
+    await handleConfirmarVenta();
+  };
+
+  const handleConfirmarVenta = async () => {
+    const selectedProducts = data.filter((item) => selectedProductIds[item.id]);
+    if (!selectedProducts.length) {
+      alert('Selecciona al menos un producto para facturar.');
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      for (const item of selectedProducts) {
+        const qtyToSell = Number(sellQuantities[item.id] || 1);
+
+        if (qtyToSell <= 0) {
+          throw new Error(`Cantidad inválida para ${item.nombre}`);
+        }
+
+        if (qtyToSell > item.cantidad) {
+          throw new Error(`No hay stock suficiente para ${item.nombre}`);
+        }
+
+        const newStock = item.cantidad - qtyToSell;
+
+        if (newStock <= 0) {
+          const { error } = await supabase.from('productos').delete().eq('id', item.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.from('productos').update({ cantidad: newStock }).eq('id', item.id);
+          if (error) throw error;
+        }
+      }
+
+      alert('Venta registrada y stock actualizado.');
+      setSelectedProductIds({});
+      setSellQuantities({});
+      fetchData();
+      resetForm();
+    } catch (error) {
+      alert('Error al facturar: ' + (error.message || error));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const productosParaFactura = data
+    .filter((item) => selectedProductIds[item.id])
+    .map((item) => ({
+      ...item,
+      cantidad: Number(sellQuantities[item.id] || 1),
+    }));
+
 
   const handleGuardar = async () => {
     try {
@@ -154,18 +226,19 @@ const fetchNombre = async () => {
         <table className="table table-xs">
           <thead>
             <tr>
+              <th>Sel</th>
               <th>Imagen</th>
               <th>Nombre</th>
               <th>Descripción</th>
               <th>Cantidad</th>
-              <th>Precio</th>
+              <th>Precio $</th>
+              <th>Cantidad a vender</th>
               <th>
                 <a href="#my_modal_8" className="btn btn-sm btn-success m-1" onClick={() => setEditId(null)}>
                   Añadir
                 </a>
 
-                <a href="#my_modal_9" className="btn btn-sm btn-success" onClick={() => {handleFacturar();
-}}>
+                <a href="#my_modal_9" className="btn btn-sm btn-success">
                   Vender
                 </a>
               </th>
@@ -175,12 +248,33 @@ const fetchNombre = async () => {
             {data.map((item) => (
               <tr key={item.id}>
                 <td>
+                  <input
+                    type="checkbox"
+                    checked={!!selectedProductIds[item.id]}
+                    onChange={() => toggleSelectProduct(item)}
+                  />
+                </td>
+                <td>
                   <img src={item.img || "https://via.placeholder.com/150"} className="w-12 h-12 object-cover rounded" />
                 </td>
                 <td className="font-bold">{item.nombre}</td>
                 <td>{item.descripcion}</td>
                 <td>{item.cantidad === 0 ? "No Stock" : item.cantidad}</td>
                 <td>${item.precio}</td>
+                <td>
+                  <input
+                    type="number"
+                    min="1"
+                    max={item.cantidad}
+                    value={selectedProductIds[item.id] ? sellQuantities[item.id] : 1}
+                    onChange={(e) => {
+                      const qty = Number(e.target.value);
+                      setSellQuantities((prev) => ({ ...prev, [item.id]: qty }));
+                    }}
+                    disabled={!selectedProductIds[item.id]}
+                    className="input input-xs w-20"
+                  />
+                </td>
                 <td>
                   <a href="#my_modal_8" className="btn btn-sm btn-primary m-1" onClick={() => prepararEdicion(item)}>
                     Editar
@@ -211,11 +305,25 @@ const fetchNombre = async () => {
 
 </div>
 
-<button className="btn btn-success" onClick={handleFacturar}>Facturar</button>
+<PDFDownloadLink
+  document={<FacturaPDF
+    nombreCliente={nombreCLI}
+    nombreVendedor={nombreVEN}
+    fecha={fecha}
+    numCedula={numcedulaCLI}
+    telefono={telefonoCLI}
+    productos={productosParaFactura}
+  />}
+  fileName="factura.pdf"
+  className="btn btn-success"
+  onClick={handleFacturar}
+>
+  {({ loading }) => (loading ? 'Generando...' : 'Descargar Factura')}
+</PDFDownloadLink>
 
-<button className="btn btn-ghost"  onClick={() => {
-resetForm();
-}}>Cancelar</button>
+<button className="btn btn-ghost ml-2" onClick={() => { resetForm(); }}>
+  Cancelar
+</button>
 
 </div>
 </div>      
@@ -236,7 +344,7 @@ resetForm();
             
             <div className="flex gap-2">
               <input type="number" placeholder="Cantidad" className="input input-bordered w-full" value={cant} onChange={(e) => setCant(e.target.value)} />
-              <input type="number" placeholder="Precio" className="input input-bordered w-full" value={prec} onChange={(e) => setPrec(e.target.value)} />
+              <input type="number" placeholder="Precio $" className="input input-bordered w-full" value={prec} onChange={(e) => setPrec(e.target.value)} />
             </div>
           </div>
 
