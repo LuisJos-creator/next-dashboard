@@ -108,6 +108,31 @@ const fetchNombre = async () => {
     await handleConfirmarVenta();
   };
 
+const handleRegistrar = async () => {
+    try {
+      setUploading(true);
+      const { error } = await supabase
+        .from("registro")
+        .insert([{
+          nombre_cliente: nombreCLI,
+          nombre_vendedor: nombreVEN,
+          fecha: fecha,
+          cedula_del_cliente: numcedulaCLI,
+          telefono_del_cliente: telefonoCLI,
+          productos: JSON.stringify(productosParaFactura), // Guardamos como JSON para mantener la estructura
+          condicion: "Venta realizada" // Puedes personalizar esto según tus necesidades
+        }]);
+
+      if (error) throw error;
+      alert("Registro guardado");
+    } catch (error) {
+      alert("Error: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
   const handleConfirmarVenta = async () => {
     const selectedProducts = data.filter((item) => selectedProductIds[item.id]);
     if (!selectedProducts.length) {
@@ -316,7 +341,7 @@ const fetchNombre = async () => {
   />}
   fileName="factura.pdf"
   className="btn btn-success"
-  onClick={handleFacturar}
+  onClick={handleFacturar , handleRegistrar} // Ejecutamos ambas funciones al hacer clic
 >
   {({ loading }) => (loading ? 'Generando...' : 'Descargar Factura')}
 </PDFDownloadLink>
