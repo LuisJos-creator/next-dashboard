@@ -40,7 +40,7 @@ const navbar = () => {
                   <a href="/inventario">inventario</a>
                 </li>
                  <li>
-                  <a href="/inventario">inventario</a>
+                  <a href="/registro">registro</a>
                 </li>
               </ul>
             </div>

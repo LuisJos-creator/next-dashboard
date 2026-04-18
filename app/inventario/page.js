@@ -45,7 +45,11 @@ const InventarioPage = () => {
   return (
     <div>
       <Navbar />
+      
       <div className="p-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-4 text-center">Inventario</h1>
+        </div>
         <List />
       </div>
     </div>
