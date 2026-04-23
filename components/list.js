@@ -31,16 +31,21 @@ const list = () => {
   };
 
 const fetchNombre = async () => {
+    const { data: user, error: userError } = await supabase.auth.getUser();
+    if (userError || !user.user) {
+      console.error("No user logged in");
+      return;
+    }
     const { data, error } = await supabase
       .from("profiles")
-      .select("name") // <--- ASEGÚRATE que diga "name" (en minúsculas e inglés)
+      .select("name")
+      .eq("id", user.user.id)
       .single();
 
     if (error) {
-      console.error("Error detallado de Supabase:", error);
+      console.error("Error fetching profile:", error);
       return;
     }
-
     if (data && data.name) {
       setNombreVEN(data.name);
     }
@@ -114,11 +119,11 @@ const handleRegistrar = async () => {
       const { error } = await supabase
         .from("registro")
         .insert([{
-          nombre_cliente: nombreCLI,
+          nombre_cliente: nombreCLI || null,
           nombre_vendedor: nombreVEN,
           fecha: fecha,
-          cedula_del_cliente: numcedulaCLI,
-          telefono_del_cliente: telefonoCLI,
+          cedula_del_cliente: numcedulaCLI ? numcedulaCLI : null,
+          telefono_del_cliente: telefonoCLI ? telefonoCLI : null,
           productos: JSON.stringify(productosParaFactura), // Guardamos como JSON para mantener la estructura
           condicion: "Venta realizada" // Puedes personalizar esto según tus necesidades
         }]);
@@ -208,11 +213,13 @@ const handleRegistrar = async () => {
         currentImageUrl = urlData.publicUrl;
       }
 
+      const cantidadValue = Number(cant);
+      const precioValue = Number(prec);
       const productoData = {
         nombre: name,
         descripcion: descripcion,
-        cantidad: cant,
-        precio: prec,
+        cantidad: Number.isNaN(cantidadValue) ? 0 : cantidadValue,
+        precio: Number.isNaN(precioValue) ? 0 : precioValue,
         img: currentImageUrl,
       };
 
@@ -232,7 +239,24 @@ const handleRegistrar = async () => {
           .insert([productoData]);
 
         if (insertError) throw insertError;
-        alert("Producto añadido");
+
+        const registroData = {
+          nombre_cliente: null,
+          nombre_vendedor: nombreVEN,
+          fecha,
+          cedula_del_cliente: null,
+          telefono_del_cliente: null,
+          productos: JSON.stringify([productoData]),
+          condicion: "Ingreso",
+        };
+
+        const { error: registroError } = await supabase
+          .from("registro")
+          .insert([registroData]);
+
+        if (registroError) throw registroError;
+
+        alert("Producto añadido y registro de ingreso creado");
       }
 
       resetForm();
@@ -341,7 +365,11 @@ const handleRegistrar = async () => {
   />}
   fileName="factura.pdf"
   className="btn btn-success"
-  onClick={handleFacturar , handleRegistrar} // Ejecutamos ambas funciones al hacer clic
+  onClick={async (event) => {
+    event.preventDefault();
+    await handleFacturar();
+    await handleRegistrar();
+  }}
 >
   {({ loading }) => (loading ? 'Generando...' : 'Descargar Factura')}
 </PDFDownloadLink>
