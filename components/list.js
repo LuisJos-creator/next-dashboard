@@ -295,6 +295,7 @@ const handleRegistrar = async () => {
                 </a>
 
                 <a href="#my_modal_9" className="btn btn-sm btn-success">
+                
                   Vender
                 </a>
               </th>
