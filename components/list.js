@@ -65,7 +65,6 @@ const fetchNombre = async () => {
     setFile(null);
     setEditId(null);
     setNombreCLI("");
-    setNombreVEN("");
     setFecha(new Date().toLocaleDateString());
     setNumCedulaCLI("");
     setTelefonoCLI("");
@@ -110,11 +109,17 @@ const fetchNombre = async () => {
 
   const handleFacturar = async () => {
     await fetchNombre();
+    const registroOk = await handleRegistrar();
+    if (!registroOk) return;
     await handleConfirmarVenta();
   };
 
 const handleRegistrar = async () => {
     try {
+      if (productosParaFactura.length === 0) {
+        alert('Selecciona al menos un producto para registrar la venta.');
+        return false;
+      }
       setUploading(true);
       const { error } = await supabase
         .from("registro")
@@ -130,8 +135,10 @@ const handleRegistrar = async () => {
 
       if (error) throw error;
       alert("Registro guardado");
+      return true;
     } catch (error) {
       alert("Error: " + error.message);
+      return false;
     } finally {
       setUploading(false);
     }
@@ -365,10 +372,8 @@ const handleRegistrar = async () => {
   />}
   fileName="factura.pdf"
   className="btn btn-success"
-  onClick={async (event) => {
-    event.preventDefault();
+  onClick={async () => {
     await handleFacturar();
-    await handleRegistrar();
   }}
 >
   {({ loading }) => (loading ? 'Generando...' : 'Descargar Factura')}

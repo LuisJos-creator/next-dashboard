@@ -1,40 +1,17 @@
 import React from "react";
 
-const stats = () => {
+const stats = ({ items = [] }) => {
   return (
-    <>
-      <div>
-        <div className="stats-horizontal shadow">
-          <div className="stat">
-            <div className="stat-title">valor</div>
-            <div className="stat-value">000,000</div>
-            <div className="stat-desc">valor</div>
-          </div>
+    <div className="stats stats-vertical shadow">
+      {items.map((item, index) => (
+        <div className="stat" key={index}>
+          <div className="stat-title">{item.title}</div>
+          <div className="stat-value">{item.value}</div>
+          {item.desc && <div className="stat-desc">{item.desc}</div>}
         </div>
-      </div>
-      <div className="divider divider-horizontal"></div>
-      <div>
-        <div className="stats-horizontal shadow">
-          <div className="stat">
-            <div className="stat-title">Valor</div>
-            <div className="stat-value">000,000</div>
-            <div className="stat-desc">Valor</div>
-          </div>
-        </div>
-      </div>
-      <div className="divider divider-horizontal"></div>
-      <div>
-        <div className="stats-horizontal shadow">
-          <div className="stat">
-            <div className="stat-title">Valor</div>
-            <div className="stat-value">000,000</div>
-            <div className="stat-desc">Valor</div>
-          </div>
-        </div>
-      </div>
-    </>
+      ))}
+    </div>
   );
 };
-
 
 export default stats;

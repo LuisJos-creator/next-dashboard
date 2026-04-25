@@ -1,23 +1,24 @@
 import React from "react";
 
-const radial = () => {
+const radial = ({ value = 70, label = "" }) => {
+  const numericValue = Math.min(100, Math.max(0, Number(value) || 0));
+
   return (
-    <>
+    <div className="text-center">
       <div
         className="radial-progress"
-        style={
-          {
-            "--value": "70",
-            "--size": "12rem",
-            "--thickness": "1rem",
-          } /* as React.CSSProperties */
-        }
-        aria-valuenow={70}
+        style={{
+          "--value": numericValue,
+          "--size": "12rem",
+          "--thickness": "1rem",
+        }}
+        aria-valuenow={numericValue}
         role="progressbar"
       >
-        70%
+        {numericValue}%
       </div>
-    </>
+      {label && <div className="mt-2 text-sm">{label}</div>}
+    </div>
   );
 };
 
