@@ -6,9 +6,9 @@ const progress = ({ value = 0, max = 100, label = "" }) => {
 
   return (
     <div className="w-full">
-      {label && <div className="mb-2 text-sm">{label}</div>}
+      {label && <div className="mb-2 text-sm text-slate-700">{label}</div>}
       <progress className="progress w-full" value={numericValue} max={max}></progress>
-      <div className="mt-1 text-xs text-right">
+      <div className="mt-1 text-xs text-right text-slate-600">
         {numericValue} / {max} ({percent}%)
       </div>
     </div>

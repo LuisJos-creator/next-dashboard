@@ -17,7 +17,7 @@ const radial = ({ value = 70, label = "" }) => {
       >
         {numericValue}%
       </div>
-      {label && <div className="mt-2 text-sm">{label}</div>}
+      {label && <div className="mt-2 text-sm text-slate-700">{label}</div>}
     </div>
   );
 };

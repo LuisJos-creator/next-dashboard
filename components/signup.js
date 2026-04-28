@@ -9,7 +9,6 @@ const Signup = () => {
 
   const handleSignUp = async () => {
     try {
-      // pasar email/password en el primer arg y user_metadata en el segundo
       const { data, error } = await supabase.auth.signUp(
         { email, password },
         { data: { display_name: displayName } }
@@ -19,18 +18,17 @@ const Signup = () => {
 
       const user = data?.user ?? null;
 
-      // Crear/actualizar fila en la tabla "profiles" si el usuario ya está disponible
       if (user) {
         const { error: profileError } = await supabase.from("profiles").upsert({
           id: user.id,
-         name: displayName,
+          name: displayName,
         });
         if (profileError) throw profileError;
         alert("Cuenta creada.");
       } else {
-        // En algunos flujos (confirmación por email) el usuario no se devuelve inmediatamente
-        alert("Registrado. Revisa tu correo y confirma tu cuenta para completar el perfil.");
+        alert("Registrado. Revisa tu correo y confirma tu cuenta.");
       }
+
       setDisplayName("");
       setEmail("");
       setPassword("");
@@ -40,44 +38,50 @@ const Signup = () => {
   };
 
   return (
-    <>
-      <div>
-        <fieldset className="fieldset rounded-box w-xs border p-4 m-9">
-          <legend className="fieldset-legend text-center">Sign Up</legend>
-
-          <label className="label">Display Name</label>
+    <div className="mx-auto w-full max-w-md rounded-[2rem] border border-base-200/70 bg-base-100/95 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+      <div className="mb-6 space-y-2 text-center">
+        <p className="text-sm uppercase tracking-[0.2em] text-primary">Nuevo usuario</p>
+        <h2 className="text-2xl font-semibold">Crear cuenta</h2>
+        <p className="text-sm text-base-content/70">
+          Completa los datos para comenzar a usar el panel de inventario.
+        </p>
+      </div>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="label">Nombre</label>
           <input
             type="text"
-            className="input"
-            placeholder="Display Name"
+            className="input input-bordered w-full"
+            placeholder="Nombre"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
           />
-
+        </div>
+        <div className="space-y-2">
           <label className="label">Email</label>
           <input
             type="email"
-            className="input"
+            className="input input-bordered w-full"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-
-          <label className="label">Password</label>
+        </div>
+        <div className="space-y-2">
+          <label className="label">Contraseña</label>
           <input
             type="password"
-            className="input"
-            placeholder="Password"
+            className="input input-bordered w-full"
+            placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-
-          <button className="btn bg-error-content mt-4" onClick={handleSignUp}>
-            Registrarse
-          </button>
-        </fieldset>
+        </div>
+        <button className="btn btn-primary w-full" onClick={handleSignUp}>
+          Registrarse
+        </button>
       </div>
-    </>
+    </div>
   );
 };
 

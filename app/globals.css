@@ -1,5 +1,64 @@
 @import "tailwindcss";
 
 @plugin "daisyui" {
-  themes: all;
+  themes: ["cupcake"];
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(circle at top left, rgba(59,130,246,0.16), transparent 22%),
+    radial-gradient(circle at 15% 20%, rgba(16,185,129,0.12), transparent 18%),
+    radial-gradient(circle at 85% 85%, rgba(168,85,247,0.12), transparent 20%);
+  color: #0f172a;
+}
+
+body,
+input,
+button,
+textarea,
+select {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(59,130,246,0.24);
+  color: #0f172a;
+}
+
+.hero-panel,
+.panel-card {
+  border-radius: 2rem;
+  border: 1px solid rgba(148,163,184,0.16);
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 20px 55px rgba(15,23,42,0.08);
+}
+
+.section-title {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.btn,
+.input,
+textarea,
+select {
+  transition: all 0.18s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
 }
