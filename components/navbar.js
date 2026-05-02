@@ -37,10 +37,10 @@ const navbar = () => {
                   <a href="/">Dashboard</a>
                 </li>
                 <li>
-                  <a href="/inventario">Inventario</a>
+                  <a href="/inventario">Productos</a>
                 </li>
                  <li>
-                  <a href="/registro">Registro</a>
+                  <a href="/facturas">Facturas</a>
                 </li>
               </ul>
             </div>

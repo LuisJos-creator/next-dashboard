@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import FacturaPDF from "./facturacion";
+import FacturaPDF from "./factupdf";
 
 const list = () => {
   const [name, setName] = useState("");
